@@ -3,6 +3,7 @@ import 'package:swagger_parser/src/generator/model/json_serializer.dart';
 import 'package:swagger_parser/src/generator/model/programming_language.dart';
 import 'package:swagger_parser/src/parser/model/normalized_identifier.dart';
 import 'package:swagger_parser/src/parser/swagger_parser_core.dart';
+import 'package:swagger_parser/src/parser/utils/private.dart';
 import 'package:swagger_parser/src/utils/base_utils.dart';
 import 'package:swagger_parser/src/utils/type_utils.dart';
 
@@ -145,6 +146,12 @@ String _toClientRequest(
     finalResponseType = 'Stream<$eventType>';
     dioResponseTypeAnnotation = '\n  @DioResponseType(ResponseType.stream)';
   } else {
+    for (final apiResponse in responsesToTransform) {
+      if (responseType.startsWith(apiResponse)) {
+        responseType =
+            '$apiResponse<${responseType.substring(apiResponse.length)}>';
+      }
+    }
     finalResponseType =
         (originalHttpResponse ? 'HttpResponse<$responseType>' : responseType);
     finalResponseType = 'Future<$finalResponseType>';

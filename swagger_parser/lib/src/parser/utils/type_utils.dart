@@ -1,6 +1,7 @@
 import 'package:collection/collection.dart';
 import 'package:swagger_parser/src/parser/model/normalized_identifier.dart';
 import 'package:swagger_parser/src/parser/utils/dart_keywords.dart';
+import 'package:swagger_parser/src/parser/utils/private.dart';
 import 'package:swagger_parser/swagger_parser.dart';
 
 /// Extension for utils
@@ -17,7 +18,8 @@ extension StringTypeX on String {
           },
         'string' => switch (format) {
             'binary' => useMultipartFile ? 'MultipartFile' : 'File',
-            'date' || 'date-time' => 'DateTime',
+            'date' => 'Date',
+            'date-time' => 'DateTime',
             _ => 'String',
           },
         'file' => useMultipartFile ? 'MultipartFile' : 'File',
@@ -132,8 +134,10 @@ String? protectDefaultValue(
 }
 
 /// Protect enum items names from incorrect symbols, keywords, etc.
-Set<UniversalEnumItem> protectEnumItemsNames(Iterable<String> names,
-    {Iterable<String>? values}) {
+Set<UniversalEnumItem> protectEnumItemsNames(
+  Iterable<String> names, {
+  Iterable<String>? values,
+}) {
   var counter = 0;
   final items = <UniversalEnumItem>{};
 
@@ -158,6 +162,15 @@ Set<UniversalEnumItem> protectEnumItemsNames(Iterable<String> names,
 
   names.forEachIndexed((index, name) {
     final (newName, renameDescription) = switch (name) {
+      /// Custom rule for Blood Types for my app.
+      _ when bloodTypes.contains(name) => (
+          name
+              .toLowerCase()
+              .replaceAll('+', 'Positive')
+              .replaceAll('-', 'Negative'),
+          null,
+        ),
+      _ when name.contains('/') => (name.replaceAll('/', '_').toCamel, null),
       _
           when _startWithNumberRegExp.hasMatch(name) &&
               _enumNameRegExp.hasMatch(numberEnumItemName(name).toCamel) =>
@@ -212,13 +225,7 @@ final _nameRegExp = RegExp(r'^[a-zA-Z_-][a-zA-Z\d_-]*$');
     // https://github.com/Carapacik/swagger_parser/issues/262
     _
         when replacedName.startsWith(r'$') &&
-            replacedName
-                    .split('')
-                    .where(
-                      (e) => e == r'$',
-                    )
-                    .length ==
-                1 =>
+            replacedName.split('').where((e) => e == r'$').length == 1 =>
       (
         replacedName.substring(1),
         'Incorrect name has been replaced. Original name: `$name`.',

@@ -215,9 +215,12 @@ final class FillController {
 
   List<GeneratedFile> addGeneratedFileComments(List<GeneratedFile> files) {
     final comment = generatedFileComment(language: config.language);
+    final packageName = config.rootClientName?.toSnake ?? 'api_client';
     return files
-        .map((file) =>
-            GeneratedFile(name: file.name, content: '$comment${file.content}'))
+        .map((file) => GeneratedFile(
+            name: file.name,
+            content:
+                "${comment}import 'package:$packageName/$packageName.dart';\n${file.content}"))
         .toList();
   }
 }

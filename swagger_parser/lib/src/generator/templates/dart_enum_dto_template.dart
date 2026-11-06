@@ -31,20 +31,17 @@ String dartEnumDtoTemplate(
 
     final enumBodyParts = [
       values,
-      if (unknownEnumValue) _unkownEnumValue(),
-      if (jsonParam) _constructor(className),
+      if (unknownEnumValue) _unknownEnumValue(),
       if (unknownEnumValue) _fromJson(className, enumClass),
-      if (jsonParam) _jsonField(enumClass),
       if (enumsToJson) _toJson(enumClass, className),
-      if (jsonParam) _toString(),
       if (unknownEnumValue) _valuesDefined(className),
     ];
 
     final sb = StringBuffer('''
 $asyncImport${dartImportDtoTemplate(jsonSerializer)}
 
-${descriptionComment(enumClass.description)}@JsonEnum()
-enum $className {
+${descriptionComment(enumClass.description)}@JsonEnum(valueField: 'json')
+enum $className(final String? json) {
 ${enumBodyParts.join()}
 }
 ''');
@@ -112,26 +109,11 @@ ${enumBodyParts.join()}
   return sb.toString();
 }
 
-String _constructor(String className) => '\n\n  const $className(this.json);\n';
-
-String _jsonField(UniversalEnumClass enumClass) {
-  final dartType = enumClass.type.toDartType();
-  return '\n  final $dartType${_nullableSign(dartType)} json;';
-}
-
-String _nullableSign(String dartType) {
-  if (dartType.endsWith('?')) {
-    return '';
-  }
-  final isDynamic = dartType == 'dynamic';
-  final nullableSign = isDynamic ? '' : '?';
-  return nullableSign;
-}
-
-String _unkownEnumValue() => r'''
+String _unknownEnumValue() => r'''
 
   /// Default value for all unparsed values, allows backward compatibility when adding new values on the backend.
-  $unknown(null);''';
+  $unknown(null);
+''';
 
 String _fromJson(String className, UniversalEnumClass enumClass) => '''
 
@@ -174,8 +156,7 @@ String _enumValue(
 
   final name = item.name.isEmpty ? 'empty' : item.name;
   return '''
-${index != 0 ? '\n' : ''}${descriptionComment(item.description, tab: '  ')}  @JsonValue($value)
-  ${name.toCamel}${jsonParam ? '($value)' : ''}''';
+${index != 0 ? '\n' : ''}${descriptionComment(item.description, tab: '  ')}  ${name.toCamel}${jsonParam ? '($value)' : ''}''';
 }
 
 String _enumValueDartMappable(
@@ -204,9 +185,6 @@ String _toJson(UniversalEnumClass enumClass, String className) {
     return value as $dartType;
   }''';
 }
-
-String _toString() =>
-    '\n\n  @override\n  String toString() => json?.toString() ?? super.toString();';
 
 String _toStringDartMappable() =>
     '\n\n  @override\n  String toString() => toValue().toString();\n';
