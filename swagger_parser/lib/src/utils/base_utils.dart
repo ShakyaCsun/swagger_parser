@@ -1,14 +1,14 @@
 import 'package:swagger_parser/src/generator/model/programming_language.dart';
-import 'package:swagger_parser/src/parser/model/normalized_identifier.dart';
 import 'package:swagger_parser/src/parser/swagger_parser_core.dart';
 import 'package:swagger_parser/src/utils/type_utils.dart';
 
 /// Provides imports as String from list of imports
 String dartImports({required Set<String> imports, String? pathPrefix}) {
-  if (imports.isEmpty) {
-    return '';
-  }
-  return '\n${imports.map((import) => "import '${pathPrefix ?? ''}${import.toSnake}.dart';").join('\n')}\n';
+  /// Using barrel files
+  return '';
+  // if (imports.isEmpty) {
+  // }
+  // return '\n${imports.map((import) => "import '${pathPrefix ?? ''}${import.toSnake}.dart';").join('\n')}\n';
 }
 
 String indentation(int length) => ' ' * length;
@@ -80,6 +80,4 @@ const _generatedCodeComment = '''
 // GENERATED CODE - DO NOT MODIFY BY HAND
 ''';
 
-const _ignoreLintsComment = '''
-// ignore_for_file: type=lint, unused_import, invalid_annotation_target, unnecessary_import
-''';
+const _ignoreLintsComment = '';

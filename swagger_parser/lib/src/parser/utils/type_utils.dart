@@ -1,6 +1,7 @@
 import 'package:collection/collection.dart';
 import 'package:swagger_parser/src/parser/model/normalized_identifier.dart';
 import 'package:swagger_parser/src/parser/utils/dart_keywords.dart';
+import 'package:swagger_parser/src/parser/utils/private.dart';
 import 'package:swagger_parser/swagger_parser.dart';
 
 /// Extension for utils
@@ -17,7 +18,8 @@ extension StringTypeX on String {
           },
         'string' => switch (format) {
             'binary' => useMultipartFile ? 'MultipartFile' : 'File',
-            'date' || 'date-time' => 'DateTime',
+            'date' => 'Date',
+            'date-time' => 'DateTime',
             _ => 'String',
           },
         'file' => useMultipartFile ? 'MultipartFile' : 'File',
@@ -158,6 +160,14 @@ Set<UniversalEnumItem> protectEnumItemsNames(Iterable<String> names,
 
   names.forEachIndexed((index, name) {
     final (newName, renameDescription) = switch (name) {
+      /// Custom rule for Blood Types for my app.
+      _ when bloodTypes.contains(name) => (
+          name
+              .toLowerCase()
+              .replaceAll('+', 'Positive')
+              .replaceAll('-', 'Negative'),
+          null
+        ),
       _
           when _startWithNumberRegExp.hasMatch(name) &&
               _enumNameRegExp.hasMatch(numberEnumItemName(name).toCamel) =>

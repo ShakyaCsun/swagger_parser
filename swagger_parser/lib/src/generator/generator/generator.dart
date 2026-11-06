@@ -4,6 +4,7 @@ import 'package:swagger_parser/src/generator/model/generated_file.dart';
 import 'package:swagger_parser/src/generator/model/generation_statistic.dart';
 import 'package:swagger_parser/src/generator/model/programming_language.dart';
 import 'package:swagger_parser/src/parser/swagger_parser_core.dart';
+import 'package:swagger_parser/src/parser/utils/private.dart';
 import 'package:swagger_parser/src/utils/file/io_file.dart';
 
 /// Handles whole cycle of generation.
@@ -52,8 +53,23 @@ class Generator {
   List<GeneratedFile> generateContent() {
     final fillController = FillController(config: config, info: info);
 
-    final dataClassesFiles =
-        dataClasses.map(fillController.fillDtoContent).toList();
+    final dataClassesFiles = dataClasses
+        .where((element) {
+          switch (element.name) {
+            case final name
+                when responsesToTransform.any(
+                  name.startsWith,
+                ):
+            case final name
+                when _unionClassDuplicates.any(name.startsWith) &&
+                    !_unionClassDuplicates.contains(name):
+              return false;
+            default:
+              return true;
+          }
+        })
+        .map(fillController.fillDtoContent)
+        .toList();
     final restClientFiles =
         restClients.map(fillController.fillRestClientContent).toList();
 
@@ -84,6 +100,7 @@ class Generator {
       return [fillController.fillMergedOutputs(files)];
     }
 
+    /// Culprit for why mark_files_as_generated: false did nothing but all good.
     return fillController.addGeneratedFileComments(files);
   }
 
@@ -100,3 +117,5 @@ class Generator {
     return (totalFiles, totalLines);
   }
 }
+
+const _unionClassDuplicates = ['RoomServerMessage', 'RoomClientMessage'];
